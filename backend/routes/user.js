@@ -39,12 +39,13 @@ router.post('/signup',async (req,res)=>{
     })
 })
 
+
+/// simple profile updater for users
 const updateBody=zod.object({
     password:zod.string(),
     firstname:zod.string(),
     lastname:zod.string()
 })
-
 router.put('/',authMiddleware,async (req,res)=>{
     const {success}=updateBody.safeParse(req.body);
     if(!success){
@@ -57,6 +58,30 @@ router.put('/',authMiddleware,async (req,res)=>{
     }
     res.json({
         message:'Updated Successfully'
+    })
+})
+
+/// to find their friends with substring too
+router.get('/bulk',async (req,res)=>{
+    const filter=req.query.filter|| "";
+    const users=await User.find({
+        $or:[{ ///or is for either of firstname or lastname
+            firstname:{
+                "$regex":filter
+            }
+        },{
+            lastname:{
+                "$regex":filter
+            }
+        }]
+    })
+    res.json({
+        user:users.map(user=>({
+            username:user.username,
+            firstname:user.firstname,
+            lastname:user.lastname,
+            _id:user._id
+        }))
     })
 })
 
